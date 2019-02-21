@@ -47,8 +47,9 @@ if __name__ == '__main__':
     US_strategy = args.sampling  #'LC' ,'MS', 'EA', 'RS'
     is_output_img = True
     parameter_constraint = args.parameter_constraint
-
-    prev_parameter = [float(x) for x in args.prev_point.split(',')]
+    
+    if parameter_constraint:
+        prev_parameter = [float(x) for x in args.prev_point.split(',')]
     #parameter_constraintを使うときは, １つ前のパラメータを入れる
     #python PDC_sampler.py data.csv --parameter_constraint True --prev_parameter [10, 20]  
     
@@ -84,7 +85,8 @@ if __name__ == '__main__':
             print('Error')
 
     data_list = np.array(data_list)
-    prev_parameter = np.array(prev_parameter)
+    if parameter_constraint:
+        prev_parameter = np.array(prev_parameter)
 
     max_label = np.max(list(set(label_list)))
     color_list = [cm.rainbow(float(i)/(max_label)) for i in range(max_label+1)]
