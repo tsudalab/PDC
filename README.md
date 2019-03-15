@@ -10,4 +10,4 @@ Efficient phase diagram construction based on uncertainty sampling
   - `python PDC_sampler.py data.csv --estimation [Estimation method] --sampling [Sampling method] --parameter_constraint --prev_point '20, 100'`
 
 ## Reference
-Kei Terayama, Ryo Tamura, Yoshitaro Nose, Hidenori Hiramatsu, Hideo Hosono, Yasushi Okuno, Koji Tsuda, Efficient Construction Method for Phase Diagrams Using Uncertainty Sampling, Physical Review Materials, Vol. 3, No. 3, 033802, 2019. [DOI: 10.1103/PhysRevMaterials.3.033802]
+Kei Terayama, Ryo Tamura, Yoshitaro Nose, Hidenori Hiramatsu, Hideo Hosono, Yasushi Okuno, Koji Tsuda, Efficient Construction Method for Phase Diagrams Using Uncertainty Sampling, *Physical Review Materials*, Vol. 3, No. 3, 033802, 2019. [DOI: 10.1103/PhysRevMaterials.3.033802]
