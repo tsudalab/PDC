@@ -139,7 +139,7 @@ if __name__ == '__main__':
 
 
     #calculate Uncertainly Score
-    if US_strategy == 'E':
+    if US_strategy == 'EA':
         pred_entropies = stats.distributions.entropy(label_distributions.T)
         u_score_list = pred_entropies/np.max(pred_entropies)
         if parameter_constraint:
