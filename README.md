@@ -9,7 +9,7 @@ Efficient phase diagram construction based on uncertainty sampling
 - The following command outputs the next point in 'next_point.csv' with parameter constraint.
   - `python PDC_sampler.py data.csv --estimation [Estimation method] --sampling [Sampling method] --parameter_constraint --prev_point '20, 100'`
 - The following command outputs the multiple next points in 'next_point.csv' without parameter constraint.
-  - `python PDC_sampler.py data.csv --estimation [Estimation method] --sampling [Sampling method] --multi_method [Multiple method] --multi_num [Number of suggestion] --NE_k [k]`
+  - `python PDC_sampler.py data.csv --estimation [Estimation method] --sampling [Sampling method] --multi_method [Multiple method] --multi_num [Number of suggestions] --NE_k [k]`
   - Estimation method: LP or LS
   - Sampling method: LC, MS, EA, or RS
   - Multiple method: OU or NE (OU: Only US ranking, NE: Neighobr Exclusion)
