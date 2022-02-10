@@ -10,6 +10,7 @@ import csv
 
 from scipy import stats
 from sklearn.semi_supervised import label_propagation
+#import sklearn.semi_supervised
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, f1_score
@@ -40,14 +41,19 @@ if __name__ == '__main__':
     parser.add_argument("--sampling", default='LC')
     parser.add_argument("--parameter_constraint", help="optional", action="store_true")
     parser.add_argument("--prev_point", help="optional", type=str)
+    parser.add_argument("--multi_method", help="optional") #multi
+    parser.add_argument("--multi_num", help="optional") #multi
+    parser.add_argument("--NE_k", help="optional") #multi
+
     args = parser.parse_args()
-    
+   
     input_data = args.input
     LP_algorithm = args.estimation #'LP', 'LS'                                                                   
     US_strategy = args.sampling  #'LC' ,'MS', 'EA', 'RS'
     is_output_img = True
     parameter_constraint = args.parameter_constraint
-    
+
+
     if parameter_constraint:
         prev_parameter = [float(x) for x in args.prev_point.split(',')]
     #parameter_constraintを使うときは, １つ前のパラメータを入れる
@@ -58,7 +64,20 @@ if __name__ == '__main__':
     out_f = open(output_dir, 'w')
     out_f.close()
 
+    #multi
+    multi_method = args.multi_method
     
+    if args.multi_num == None:
+        num_multi = 2
+    else:
+        num_multi = int(args.multi_num)
+
+    if args.NE_k == None:
+        k = 1
+    else:
+        k = int(args.NE_k)
+    ######
+
     #----load data
     f = open(input_data, 'r')
 
@@ -104,8 +123,10 @@ if __name__ == '__main__':
     #estimate phase of each point
     if LP_algorithm == 'LS':
         lp_model = label_propagation.LabelSpreading()
+        #lp_model = sklearn.semi_supervised.LabelSpreading()
     elif LP_algorithm == 'LP':
         lp_model = label_propagation.LabelPropagation()
+        #lp_model = sklearn.semi_supervised.LabelPropagation()
 
     lp_model.fit(data_list_std, label_train)
     predicted_labels = lp_model.transduction_[unlabeled_index_list]
@@ -131,6 +152,11 @@ if __name__ == '__main__':
         else:
             uncertainty_index = [unlabeled_index_list[np.argmax(pred_entropies)]]
 
+            #############
+            # all ranking of uncertain point
+            ranking = np.array(u_score_list).argsort()[::-1]
+            multi_uncertainty_index = [unlabeled_index_list[ranking[i]] for i in range(len(unlabeled_index_list))]
+            #############
 
     elif US_strategy == 'LC':
         u_score_list = 1- np.max(label_distributions, axis = 1)
@@ -143,6 +169,12 @@ if __name__ == '__main__':
             uncertainty_index = [cand_index_list[np.argmax(1- np.max(np.array(cand_LC_list), axis = 1))]]
         else:
             uncertainty_index = [unlabeled_index_list[np.argmax(1- np.max(label_distributions, axis = 1))]]
+            
+            #############
+            # all ranking of uncertain point
+            ranking = np.array(u_score_list).argsort()[::-1]
+            multi_uncertainty_index = [unlabeled_index_list[ranking[i]] for i in range(len(unlabeled_index_list))]
+            #############
 
     elif US_strategy == 'MS':
 
@@ -162,6 +194,13 @@ if __name__ == '__main__':
             uncertainty_index = [cand_index_list[np.argmin(cand_margin_list)]]    
         else:
             uncertainty_index = [unlabeled_index_list[np.argmin(u_score_list)]]
+            
+            #############
+            # all ranking of uncertain point
+            ranking = np.array(u_score_list).argsort()[::-1]
+            multi_uncertainty_index = [unlabeled_index_list[ranking[i]] for i in range(len(unlabeled_index_list))]
+            #############
+        
         u_score_list = 1-  np.array(u_score_list)
 
     elif US_strategy == 'RS':
@@ -170,19 +209,83 @@ if __name__ == '__main__':
             uncertainty_index = [np.random.permutation(cand_index_list)[0]]
         else:
             uncertainty_index = [np.random.permutation(unlabeled_index_list)[0]]
+            
+            #############
+            # all ranking of uncertain point
+            ranking = np.random.permutation(unlabeled_index_list)
+            multi_uncertainty_index = list(ranking)
+            #############
+
         u_score_list = [0.5 for i in range(len(label_distributions))]
 
 
-    dt_now = datetime.datetime.now()
-    print(dt_now)
-    print('Next point:', data_list[uncertainty_index[0]])
-    out_f = open(output_dir, 'a')
-    out_f.write('#'+str(dt_now)+'\n')
-    for i in range(len(data_list[uncertainty_index[0]])):
-        out_f.write(str(data_list[uncertainty_index[0]][i]))
-        if i < len(data_list[uncertainty_index[0]])-1:
-            out_f.write(',')
-    out_f.close()
+    if multi_method == None:
+
+        dt_now = datetime.datetime.now()
+        print(dt_now)
+        print('Next point:', data_list[uncertainty_index[0]])
+        out_f = open(output_dir, 'a')
+        out_f.write('#'+str(dt_now)+'\n')
+        for i in range(len(data_list[uncertainty_index[0]])):
+            out_f.write(str(data_list[uncertainty_index[0]][i]))
+            if i < len(data_list[uncertainty_index[0]])-1:
+                out_f.write(',')
+        out_f.close()
+
+
+    else:
+
+        #############
+        #multi
+
+        if multi_method == 'OU':
+
+            US_point = multi_uncertainty_index[0:num_multi]
+
+        if multi_method == 'NE':
+
+            from scipy.spatial import distance
+
+            neighbor_dist = []
+
+            for i in range(len(data_list)):
+
+                dist_value = round(distance.euclidean(data_list[0],data_list[i]),5)
+
+                if dist_value not in neighbor_dist:
+                    neighbor_dist.append(dist_value)
+
+            neighbor_dist.sort()
+
+            delta = neighbor_dist[k]
+
+            US_point = []
+
+            for i in range(len(multi_uncertainty_index)):
+
+                if i == 0: US_point.append(multi_uncertainty_index[i])
+
+                true_num = 0
+
+                for j in range(len(US_point)):
+
+                    two_dist = distance.euclidean(data_list[US_point[j]], data_list[multi_uncertainty_index[i]])
+
+                    if round(two_dist, 5) > delta:
+                                
+                        true_num += 1
+
+                if true_num == len(US_point) and len(US_point) < num_multi: US_point.append(multi_uncertainty_index[i])
+
+       
+        for i in range(len(US_point)):
+
+            print('Next points :',i+1, data_list[US_point[i]])
+
+        #############
+
+
+
 
     if is_output_img and dimension == 2:
 
