@@ -197,7 +197,7 @@ if __name__ == '__main__':
             
             #############
             # all ranking of uncertain point
-            ranking = np.array(u_score_list).argsort()[::-1]
+            ranking = np.array(u_score_list).argsort()
             multi_uncertainty_index = [unlabeled_index_list[ranking[i]] for i in range(len(unlabeled_index_list))]
             #############
         
